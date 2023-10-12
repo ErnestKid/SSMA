@@ -1,7 +1,5 @@
 {
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
+  "image": "mcr.microsoft.com/vscode/devcontainers/base:ubuntu",
   "features": {
     "ghcr.io/jarrodcolburn/features/flutter-sdk:0": {},
     "ghcr.io/devcontainers-community/templates/dart:1": {}
