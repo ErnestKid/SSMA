@@ -1,19 +1,2 @@
-# Flutter/Dart specific files
-**/build/
-**/ios/Pods/
-**/android/.gradle/
-**/android/app/build/
-**/android/build/
-**/android/gradle/
-**/ios/Flutter/
-**/ios/Runner/GeneratedPluginRegistrant.*
-**/lib/generated_plugin_registrant.dart
-**/*.iml
-**/*.log
-**/*.metadata
-**/*.lock
-**/*.flutter-plugins
-**/*.flutter-plugins-dependencies
-.DS_Store
-**/PocketBase
+/PocketBase
 .vscode/
