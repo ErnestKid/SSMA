@@ -1,5 +1,4 @@
-import 'dart:math';
-
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:ssma_app/homepage.dart';
 import 'package:ssma_app/pb.dart';
@@ -17,28 +16,38 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
+  static final _defaultLightColorScheme =
+      ColorScheme.fromSwatch(primarySwatch: Colors.blue);
+  static final _defaultDarkColorScheme = ColorScheme.fromSwatch(
+      primarySwatch: Colors.blue, brightness: Brightness.dark);
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: SafeArea(
-        child: Scaffold(
-          body: Center(
-              child: StreamBuilder(
-                  stream: pb.authStore.onChange,
-                  builder: (context, snapshot) {
-                    debugPrint(snapshot.data.toString());
-                    if (pb.authStore.isValid) {
-                      debugPrint('Data: ${snapshot.data}');
-                      return const HomePage();
-                    } else {
-                      debugPrint('Data: ${snapshot.data}');
-                      debugPrint('No data');
-                      return const RegisterLoginToggle();
-                    }
-                  })),
+    return DynamicColorBuilder(builder: (lightColorScheme, darkColorScheme) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'SSMA',
+        darkTheme: ThemeData(
+          colorScheme: darkColorScheme ?? _defaultDarkColorScheme,
+          useMaterial3: true,
         ),
-      ),
-    );
+        theme: ThemeData(
+            colorScheme: lightColorScheme ?? _defaultLightColorScheme,
+            useMaterial3: true),
+        home: SafeArea(
+          child: Scaffold(
+            body: Center(
+                child: StreamBuilder(
+                    stream: pb.authStore.onChange,
+                    builder: (context, snapshot) {
+                      if (pb.authStore.isValid) {
+                        return const HomePage();
+                      } else {
+                        return const RegisterLoginToggle();
+                      }
+                    })),
+          ),
+        ),
+      );
+    });
   }
 }

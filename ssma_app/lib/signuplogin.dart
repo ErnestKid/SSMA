@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ssma_app/pb.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class RegisterLoginToggle extends StatefulWidget {
   const RegisterLoginToggle({super.key});
@@ -51,15 +53,26 @@ class _LoginPageState extends State<LoginPage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              const Icon(Icons.account_circle_outlined,
-                  size: 100, color: Colors.black),
-              const SizedBox(height: 50),
+              Icon(
+              Icons.account_circle,
+                size: 100,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 15),
+                child: Text(
+                  "Welcome Back!",
+                  style: TextStyle(fontSize: 30),
+                ),
+              ),
               _SignInForm(),
+              const SizedBox(height: 18),
               GestureDetector(
                   onTap: widget.onTap,
-                  child: const Text('Sign Up?',
+                  child: Text('Sign Up?',
                       style: TextStyle(
-                          color: Colors.blue, fontWeight: FontWeight.bold))),
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold))),
             ],
           ),
         ),
@@ -86,15 +99,31 @@ class _RegisterPageState extends State<RegisterPage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              const Icon(Icons.add_circle_outline_outlined,
-                  size: 100, color: Colors.black),
-              const SizedBox(height: 50),
+              GestureDetector(
+                onTap: () {},
+                child: Stack(
+                  children: [
+                    Icon(Icons.account_circle,
+                        size: 100,
+                        color: Theme.of(context).colorScheme.primary),
+                    Positioned(
+                      bottom: 1,
+                      right: 1,
+                      child: Icon(Icons.add_circle,
+                          size: 30,
+                          color: Theme.of(context).colorScheme.secondary),
+                    )
+                  ],
+                ),
+              ),
+              _SignUpForm(),
               GestureDetector(
                   onTap: widget.onTap,
-                  child: const Text(
+                  child: Text(
                     'Sign In?',
                     style: TextStyle(
-                        color: Colors.blue, fontWeight: FontWeight.bold),
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold),
                   )),
             ],
           ),
@@ -177,7 +206,152 @@ class __SignInFormState extends State<_SignInForm> {
               controller: passwordController,
             ),
           ),
-          ElevatedButton(onPressed: signInMethod, child: const Text('Sign In'))
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: ElevatedButton(
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  signInMethod();
+                }
+              },
+              child: const Text('Sign In'),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class _SignUpForm extends StatefulWidget {
+  @override
+  State<_SignUpForm> createState() => __SignUpFormState();
+}
+
+class __SignUpFormState extends State<_SignUpForm> {
+  final _formKey = GlobalKey<FormState>();
+
+  final usernameController = TextEditingController();
+  final passwordController = TextEditingController();
+  final passwordConfirmController = TextEditingController();
+  final emailController = TextEditingController();
+  final nameController = TextEditingController();
+  final isBot = bool;
+  File? _file;
+
+  Future<void> signUpMethod() async {
+    try {
+      final user = await pb.collection('users').create(body: {
+        'username': usernameController,
+        'password': passwordController,
+        'email': emailController,
+        'avatar': _file,
+        'name': nameController,
+        'confirmPassword': passwordConfirmController,
+        'isBot': isBot,
+      });
+      if (pb.authStore.isValid != false) {
+        pb.authStore.save(pb.authStore.token, pb.authStore.model);
+      }
+      debugPrint(user.toString());
+    } catch (error) {
+      debugPrint('Error: $error');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: TextFormField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Name',
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a name';
+                }
+                return null;
+              },
+              autocorrect: false,
+              controller: nameController,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: TextFormField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Email',
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter an email';
+                }
+                return null;
+              },
+              autocorrect: false,
+              controller: emailController,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: TextFormField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Username',
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a username';
+                }
+                return null;
+              },
+              autocorrect: false,
+              controller: usernameController,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: TextFormField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Password',
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a password';
+                }
+                return null;
+              },
+              autocorrect: false,
+              obscureText: true,
+              controller: passwordController,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: TextFormField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Confirm Password',
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please confirm your password';
+                }
+                return null;
+              },
+              autocorrect: false,
+              obscureText: true,
+              controller: passwordConfirmController,
+            ),
+          ),
         ],
       ),
     );
