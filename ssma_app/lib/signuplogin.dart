@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ssma_app/pb.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 
 class RegisterLoginToggle extends StatefulWidget {
   const RegisterLoginToggle({super.key});
@@ -54,7 +55,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             children: [
               Icon(
-              Icons.account_circle,
+                Icons.account_circle,
                 size: 100,
                 color: Theme.of(context).colorScheme.primary,
               ),
@@ -99,23 +100,6 @@ class _RegisterPageState extends State<RegisterPage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              GestureDetector(
-                onTap: () {},
-                child: Stack(
-                  children: [
-                    Icon(Icons.account_circle,
-                        size: 100,
-                        color: Theme.of(context).colorScheme.primary),
-                    Positioned(
-                      bottom: 1,
-                      right: 1,
-                      child: Icon(Icons.add_circle,
-                          size: 30,
-                          color: Theme.of(context).colorScheme.secondary),
-                    )
-                  ],
-                ),
-              ),
               _SignUpForm(),
               GestureDetector(
                   onTap: widget.onTap,
@@ -146,6 +130,7 @@ class __SignInFormState extends State<_SignInForm> {
 
   void signInMethod() async {
     showDialog(
+        barrierDismissible: false,
         context: context,
         builder: (context) => const Center(
               child: CircularProgressIndicator(),
@@ -154,14 +139,16 @@ class __SignInFormState extends State<_SignInForm> {
       final userAuth = await pb
           .collection('users')
           .authWithPassword(usernameController.text, passwordController.text);
+      pb.authStore.save(pb.authStore.token, pb.authStore.model);
       if (mounted) {
-        pb.authStore.save(pb.authStore.token, pb.authStore.model);
         Navigator.of(context).pop();
       }
       debugPrint(userAuth.toString());
     } catch (error) {
       debugPrint('Error: $error');
-      Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -176,11 +163,11 @@ class __SignInFormState extends State<_SignInForm> {
             child: TextFormField(
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                hintText: 'Username',
+                hintText: 'Username/Email',
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter a username';
+                  return 'Please enter a username/email';
                 }
                 return null;
               },
@@ -239,23 +226,50 @@ class __SignUpFormState extends State<_SignUpForm> {
   final isBot = bool;
   File? _file;
 
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      _file = File(image!.path);
+    });
+  }
+
   Future<void> signUpMethod() async {
+    showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) => const Center(
+              child: CircularProgressIndicator(),
+            ));
     try {
       final user = await pb.collection('users').create(body: {
-        'username': usernameController,
-        'password': passwordController,
-        'email': emailController,
-        'avatar': _file,
-        'name': nameController,
-        'confirmPassword': passwordConfirmController,
+        'username': usernameController.text,
+        'password': passwordController.text,
+        'email': emailController.text,
+        'name': nameController.text,
+        'passwordConfirm': passwordConfirmController.text,
         'isBot': isBot,
-      });
-      if (pb.authStore.isValid != false) {
-        pb.authStore.save(pb.authStore.token, pb.authStore.model);
+      }, files: [
+        http.MultipartFile.fromBytes(
+          'avatar',
+          _file!.readAsBytesSync(),
+          filename: _file!.path.split('/').last,
+        )
+      ]);
+      await pb.collection('users').authWithPassword(
+            usernameController.text,
+            passwordController.text,
+          );
+      pb.authStore.save(pb.authStore.token, pb.authStore.model);
+      if (mounted) {
+        Navigator.of(context).pop();
       }
       debugPrint(user.toString());
     } catch (error) {
       debugPrint('Error: $error');
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -265,6 +279,46 @@ class __SignUpFormState extends State<_SignUpForm> {
       key: _formKey,
       child: Column(
         children: [
+          FormField(
+            validator: (value) {
+              if (_file == null) {
+                return 'Please enter an avatar';
+              }
+              return null;
+            },
+            builder: (field) => GestureDetector(
+              onTap: () {
+                _pickImage();
+              },
+              child: Stack(
+                children: [
+                  _file != null
+                      ? CircleAvatar(
+                          radius: 45,
+                          foregroundImage: FileImage(
+                            _file!,
+                          ))
+                      : Icon(Icons.account_circle,
+                          size: 100,
+                          color: Theme.of(context).colorScheme.primary),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Icon(Icons.add_circle,
+                        size: 30,
+                        color: Theme.of(context).colorScheme.secondary),
+                  )
+                ],
+              ),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 15),
+            child: Text(
+              "Welcome!",
+              style: TextStyle(fontSize: 30),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: TextFormField(
@@ -352,6 +406,14 @@ class __SignUpFormState extends State<_SignUpForm> {
               controller: passwordConfirmController,
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: ElevatedButton(
+                onPressed: () {
+                  signUpMethod();
+                },
+                child: const Text("Sign Up")),
+          )
         ],
       ),
     );
