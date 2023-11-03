@@ -132,8 +132,24 @@ class __SignInFormState extends State<_SignInForm> {
     showDialog(
         barrierDismissible: false,
         context: context,
-        builder: (context) => const Center(
-              child: CircularProgressIndicator(),
+        builder: (context) => Center(
+              child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Theme.of(context).colorScheme.surface),
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Text(
+                        'Signing you in...',
+                      )
+                    ],
+                  )),
             ));
     try {
       final userAuth = await pb
@@ -173,6 +189,7 @@ class __SignInFormState extends State<_SignInForm> {
               },
               autocorrect: false,
               controller: usernameController,
+              textInputAction: TextInputAction.next,
             ),
           ),
           Padding(
@@ -191,6 +208,11 @@ class __SignInFormState extends State<_SignInForm> {
               autocorrect: false,
               obscureText: true,
               controller: passwordController,
+              onFieldSubmitted: (value) {
+                if (_formKey.currentState!.validate()) {
+                  signInMethod();
+                }
+              },
             ),
           ),
           Padding(
@@ -229,6 +251,7 @@ class __SignUpFormState extends State<_SignUpForm> {
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
     setState(() {
       _file = File(image!.path);
     });
@@ -238,8 +261,11 @@ class __SignUpFormState extends State<_SignUpForm> {
     showDialog(
         barrierDismissible: false,
         context: context,
-        builder: (context) => const Center(
-              child: CircularProgressIndicator(),
+        builder: (context) => Center(
+              child: Container(
+                  margin: EdgeInsets.all(20),
+                  color: Theme.of(context).colorScheme.primary,
+                  child: CircularProgressIndicator()),
             ));
     try {
       final user = await pb.collection('users').create(body: {
@@ -334,6 +360,7 @@ class __SignUpFormState extends State<_SignUpForm> {
               },
               autocorrect: false,
               controller: nameController,
+              textInputAction: TextInputAction.next,
             ),
           ),
           Padding(
@@ -351,6 +378,7 @@ class __SignUpFormState extends State<_SignUpForm> {
               },
               autocorrect: false,
               controller: emailController,
+              textInputAction: TextInputAction.next,
             ),
           ),
           Padding(
@@ -368,6 +396,7 @@ class __SignUpFormState extends State<_SignUpForm> {
               },
               autocorrect: false,
               controller: usernameController,
+              textInputAction: TextInputAction.next,
             ),
           ),
           Padding(
@@ -386,6 +415,7 @@ class __SignUpFormState extends State<_SignUpForm> {
               autocorrect: false,
               obscureText: true,
               controller: passwordController,
+              textInputAction: TextInputAction.next,
             ),
           ),
           Padding(
@@ -404,6 +434,11 @@ class __SignUpFormState extends State<_SignUpForm> {
               autocorrect: false,
               obscureText: true,
               controller: passwordConfirmController,
+              onFieldSubmitted: (value) {
+                if (_formKey.currentState!.validate()) {
+                  signUpMethod();
+                }
+              },
             ),
           ),
           Padding(

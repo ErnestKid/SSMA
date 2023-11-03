@@ -17,9 +17,9 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   static final _defaultLightColorScheme =
-      ColorScheme.fromSwatch(primarySwatch: Colors.blue);
-  static final _defaultDarkColorScheme = ColorScheme.fromSwatch(
-      primarySwatch: Colors.blue, brightness: Brightness.dark);
+      ColorScheme.fromSeed(seedColor: Colors.blue);
+  static final _defaultDarkColorScheme = ColorScheme.fromSeed(
+      seedColor: Colors.blue, brightness: Brightness.dark);
   @override
   Widget build(BuildContext context) {
     return DynamicColorBuilder(builder: (lightColorScheme, darkColorScheme) {
@@ -41,7 +41,8 @@ class _MainAppState extends State<MainApp> {
                     builder: (context, snapshot) {
                       if (pb.authStore.isValid) {
                         return const HomePage();
-                      } else {
+                      } 
+                    else {
                         return const RegisterLoginToggle();
                       }
                     })),
